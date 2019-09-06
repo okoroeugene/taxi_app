@@ -5,8 +5,10 @@ import Geolocation from '@react-native-community/geolocation';
 import RNGooglePlaces from "react-native-google-places";
 import Axios from "axios";
 import Geocoder from 'react-native-geocoding';
-Geocoder.init('AIzaSyBMMFhVJYdRRst-pXSje7f_I7EPHDkPkyk'); // use a valid API key
+Geocoder.init('AIzaSyA-HjztLKyWGOUaIG9Bx_n6Ie_A5p1qMkQ'); // use a valid API key
 import store from '../stores';
+import calculateFare from '../helpers/FareCalculator';
+var polyline = require('@mapbox/polyline');
 
 const {
     GET_CURRENT_LOCATION,
@@ -19,9 +21,11 @@ const {
     GET_SELECTED_ADDRESS_ERROR,
     GET_DISTANCE_MATRIX,
     GET_DISTANCE_MATRIX_ERROR,
-    GET_INITIAL_PICKUP_ADDRESS,
-    GET_INITIAL_PICKUP_ADDRESS_ERROR,
+    UPDATE_INPUT_ADDRESS,
+    UPDATE_INPUT_ADDRESS_ERROR,
     GET_FARE,
+    GET_ROUTE_DIRECTIONS,
+    GET_ROUTE_DIRECTIONS_ERROR,
     BOOK_CAR,
     GET_NEARBY_DRIVERS
 } = constants;
@@ -53,21 +57,21 @@ export function getCurrentLocation() {
     }
 }
 
-export function setInitialAddress() {
+export function updateInputAddress(region) {
     return (dispatch) => {
-        Geocoder.from(store.getState().home.location.coords.latitude, store.getState().home.location.coords.longitude)
+        Geocoder.from(region.latitude, region.longitude)
             .then(json => {
                 var addressComponent = json.results[0];
                 RNGooglePlaces.lookUpPlaceByID(addressComponent.place_id)
                     .then((results) => {
                         dispatch({
-                            type: GET_INITIAL_PICKUP_ADDRESS,
+                            type: UPDATE_INPUT_ADDRESS,
                             payload: results
                         })
                     })
             })
             .catch(error => dispatch({
-                type: GET_INITIAL_PICKUP_ADDRESS_ERROR,
+                type: UPDATE_INPUT_ADDRESS_ERROR,
                 payload: error
             }));
     }
@@ -147,16 +151,19 @@ export function getSelectedAddress(payload) {
                 //Get the distance and time
                 if (store().home.selectedAddress.pickUp && store().home.selectedAddress.dropOff) {
                     let query = {
-                        origins: store().home.selectedAddress.pickUp.latitude + "," + store().home.selectedAddress.pickUp.longitude,
-                        destinations: store().home.selectedAddress.pickUp.latitude + "," + store().home.selectedAddress.pickUp.longitude,
+                        origins: store().home.selectedAddress.pickUp.location.latitude + "," + store().home.selectedAddress.pickUp.location.longitude,
+                        destinations: store().home.selectedAddress.dropOff.location.latitude + "," + store().home.selectedAddress.dropOff.location.longitude,
                         mode: "driving",
-                        key: "AIzaSyBMMFhVJYdRRst-pXSje7f_I7EPHDkPkyk"
+                        key: "AIzaSyA-HjztLKyWGOUaIG9Bx_n6Ie_A5p1qMkQ"
                     }
-                    Axios.get('https://maps.googleapis.com/maps/api/distancematrix/json', query)
+                    console.log(query)
+                    Axios.get(`https://maps.googleapis.com/maps/api/distancematrix/json?origins=${query.origins}&destinations=${query.destinations}&mode=${query.mode}&key=${query.key}`)
                         .then(response => {
+                            console.log('MATRIXXXXXXX')
+                            console.log(response.data)
                             dispatch({
                                 type: GET_DISTANCE_MATRIX,
-                                payload: response.body
+                                payload: response.data
                             });
                         })
                         .catch(err => {
@@ -181,8 +188,6 @@ export function getSelectedAddress(payload) {
                             payload: fare
                         })
                     }
-
-
                 }, 2000)
 
             })
@@ -197,129 +202,29 @@ export function getSelectedAddress(payload) {
     }
 }
 
-// //get nearby drivers
-
-// export function getNearByDrivers(){
-// 	return(dispatch, store)=>{
-// 		request.get("http://localhost:3000/api/driverLocation")
-// 		.query({
-// 			latitude:3.145909,
-// 			longitude:101.696985	
-// 		})
-// 		.finish((error, res)=>{
-// 			if(res){
-// 				dispatch({
-// 					type:GET_NEARBY_DRIVERS,
-// 					payload:res.body
-// 				});
-// 			}
-
-// 		});
-// 	};
-// }
-//--------------------
-//Action Handlers
-//--------------------
-function handleGetCurrentLocation(state, action) {
-    return update(state, {
-        region: {
-            latitude: {
-                $set: action.payload.coords.latitude
-            },
-            longitude: {
-                $set: action.payload.coords.longitude
-            },
-            latitudeDelta: {
-                $set: LATITUDE_DELTA
-            },
-            longitudeDelta: {
-                $set: LONGITUDE_DELTA
+export function getRouteDirections() {
+    return (dispatch, store) => {
+        if (store().home.selectedAddress.pickUp && store().home.selectedAddress.dropOff) {
+            let query = {
+                origins: store().home.selectedAddress.pickUp.location.latitude + "," + store().home.selectedAddress.pickUp.location.longitude,
+                destinations: store().home.selectedAddress.dropOff.location.latitude + "," + store().home.selectedAddress.dropOff.location.longitude,
+                mode: "driving",
+                key: "AIzaSyA-HjztLKyWGOUaIG9Bx_n6Ie_A5p1qMkQ"
             }
+            const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${query.origins}&destination=${query.destinations}&key=${query.key}&mode=${query.mode}`;
+            Axios.get(url)
+                .then(response => {
+                    dispatch({
+                        type: GET_ROUTE_DIRECTIONS,
+                        payload: polyline.decode(response.data.routes[0].overview_polyline.points)
+                    });
+                })
+                .catch(err => {
+                    dispatch({
+                        type: GET_ROUTE_DIRECTIONS_ERROR,
+                        payload: err
+                    });
+                })
         }
-    })
-}
-
-function handleGetInputDate(state, action) {
-    const { key, value } = action.payload;
-    return update(state, {
-        inputData: {
-            [key]: {
-                $set: value
-            }
-        }
-    });
-}
-
-
-function handleGetAddressPredictions(state, action) {
-    return update(state, {
-        predictions: {
-            $set: action.payload
-        }
-    })
-}
-
-function handleGetSelectedAddress(state, action) {
-    let selectedTitle = state.resultTypes.pickUp ? "selectedPickUp" : "selectedDropOff"
-    return update(state, {
-        selectedAddress: {
-            [selectedTitle]: {
-                $set: action.payload
-            }
-        },
-        resultTypes: {
-            pickUp: {
-                $set: false
-            },
-            dropOff: {
-                $set: false
-            }
-        }
-    })
-}
-
-function handleGetDitanceMatrix(state, action) {
-    return update(state, {
-        distanceMatrix: {
-            $set: action.payload
-        }
-    })
-}
-
-function handleGetFare(state, action) {
-    return update(state, {
-        fare: {
-            $set: action.payload
-        }
-    })
-}
-
-//handle book car
-
-function handleBookCar(state, action) {
-    return update(state, {
-        booking: {
-            $set: action.payload
-        }
-    })
-}
-
-
-//handle get nearby drivers
-function handleGetNearbyDrivers(state, action) {
-    return update(state, {
-        nearByDrivers: {
-            $set: action.payload
-        }
-    });
-}
-
-
-function handleBookingConfirmed(state, action) {
-    return update(state, {
-        booking: {
-            $set: action.payload
-        }
-    });
-
+    }
 }

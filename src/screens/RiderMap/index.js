@@ -5,19 +5,18 @@ import * as actionCreators from '../../actions';
 import {
     StyleSheet,
     View,
-    Text,
     TouchableOpacity,
     Platform,
     PermissionsAndroid,
     Dimensions
 } from "react-native";
-import Geolocation from '@react-native-community/geolocation';
 import MapView, {
     Marker,
     AnimatedRegion,
     Polyline,
     PROVIDER_GOOGLE
 } from "react-native-maps";
+import Geolocation from '@react-native-community/geolocation';
 import haversine from "haversine";
 import {
     Item,
@@ -25,12 +24,12 @@ import {
     InputGroup,
     Icon
 } from "native-base";
-// import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-// import RNGooglePlaces from 'react-native-google-places';
-// import AutoComplete from "./AutoComplete";
+import styles from "./RiderMapStyles";
+// import AutoComplete from "../AutoComplete";
 import MapContainer from "../MapContainer";
 import MapSearch from "../MapSearch";
 import SearchResult from "../SearchResults";
+import BookingDetails from '../BookingDetails';
 
 const homePlace = { description: 'Home', geometry: { location: { lat: 48.8152937, lng: 2.4597668 } } };
 const workPlace = { description: 'Work', geometry: { location: { lat: 48.8496818, lng: 2.2940881 } } };
@@ -48,8 +47,9 @@ class RiderMap extends React.Component {
 
         this.state = {
             inputTxt: false,
-            latitude: LATITUDE,
-            longitude: LONGITUDE,
+            region: {
+
+            },
             routeCoordinates: [],
             distanceTravelled: 0,
             prevLatLng: {},
@@ -62,58 +62,76 @@ class RiderMap extends React.Component {
         };
     }
 
-    UNSAFE_componentWillReceiveProps(prevProps){
-        if (prevProps.home.location && prevProps.home.location != this.props.home.location) {
-            this.props.setInitialAddress();
-        }
-    }
-
     componentDidMount() {
         this.props.getCurrentLocation();
         const { coordinate } = this.state;
-        if (Platform.OS === "android") {
-            this.requestCameraPermission();
-        }
+        // this.requestCameraPermission();
 
-        this.watchID = Geolocation.watchPosition(
-            position => {
-                const { routeCoordinates, distanceTravelled } = this.state;
-                const { latitude, longitude } = position.coords;
+        // this.watchID = Geolocation.watchPosition(
+        //     position => {
+        //         const { routeCoordinates, distanceTravelled } = this.state;
+        //         const { latitude, longitude } = position.coords;
 
-                const newCoordinate = {
-                    latitude,
-                    longitude
-                };
-                console.log({ newCoordinate });
+        //         const newCoordinate = {
+        //             latitude,
+        //             longitude
+        //         };
+        //         console.log({ newCoordinate });
 
-                if (Platform.OS === "android") {
-                    if (this.marker) {
-                        this.marker._component.animateMarkerToCoordinate(
-                            newCoordinate,
-                            500
-                        );
-                    }
-                } else {
-                    coordinate.timing(newCoordinate).start();
+        //         if (Platform.OS === "android") {
+        //             if (this.marker) {
+        //                 this.marker._component.animateMarkerToCoordinate(
+        //                     newCoordinate,
+        //                     500
+        //                 );
+        //             }
+        //         } else {
+        //             coordinate.timing(newCoordinate).start();
+        //         }
+
+        //         this.setState({
+        //             latitude,
+        //             longitude,
+        //             routeCoordinates: routeCoordinates.concat([newCoordinate]),
+        //             distanceTravelled:
+        //                 distanceTravelled + this.calcDistance(newCoordinate),
+        //             prevLatLng: newCoordinate
+        //         });
+        //     },
+        //     error => console.log(error),
+        //     {
+        //         enableHighAccuracy: true,
+        //         timeout: 20000,
+        //         maximumAge: 1000,
+        //         distanceFilter: 10
+        //     }
+        // );
+    }
+
+    UNSAFE_componentWillReceiveProps(prevProps) {
+        if (prevProps.home.location && prevProps.home.location != this.props.home.location) {
+            this.setState({
+                region: {
+                    latitude: prevProps.home.location.coords.latitude,
+                    longitude: prevProps.home.location.coords.longitude,
+                    latitudeDelta: LATITUDE_DELTA,
+                    longitudeDelta: LONGITUDE_DELTA
                 }
-
+            })
+        }
+        if (prevProps.home.selectedAddress && prevProps.home.selectedAddress != this.props.home.selectedAddress) {
+            if (prevProps.home.selectedAddress.pickUp.location) {
+                // this.props.updateInputAddress();
                 this.setState({
-                    latitude,
-                    longitude,
-                    routeCoordinates: routeCoordinates.concat([newCoordinate]),
-                    distanceTravelled:
-                        distanceTravelled + this.calcDistance(newCoordinate),
-                    prevLatLng: newCoordinate
-                });
-            },
-            error => console.log(error),
-            {
-                enableHighAccuracy: true,
-                timeout: 20000,
-                maximumAge: 1000,
-                distanceFilter: 10
+                    region: {
+                        latitude: prevProps.home.selectedAddress.pickUp.location.latitude,
+                        longitude: prevProps.home.selectedAddress.pickUp.location.longitude,
+                        latitudeDelta: LATITUDE_DELTA,
+                        longitudeDelta: LONGITUDE_DELTA
+                    }
+                })
             }
-        );
+        }
     }
 
     componentWillUnmount() {
@@ -123,33 +141,6 @@ class RiderMap extends React.Component {
     toggleSearchModal = () => {
         this.setState({ inputTxt: true })
     }
-
-    openSearchModal = () => {
-        alert('I opened search modal!!');
-        // RNGooglePlaces.openAutocompleteModal({
-        //     initialQuery: 'vestar',
-        //     locationRestriction: {
-        //         latitudeSW: 6.3670553,
-        //         longitudeSW: 2.7062895,
-        //         latitudeNE: 6.6967964,
-        //         longitudeNE: 4.351055
-        //     },
-        //     country: 'NG',
-        //     type: 'establishment'
-        // }, ['placeID', 'location', 'name', 'address', 'types', 'openingHours', 'plusCode', 'rating', 'userRatingsTotal', 'viewport']
-        // )
-        //     .then((place) => {
-        //         console.log(place);
-        //     })
-        //     .catch(error => console.log(error.message));
-    }
-
-    getMapRegion = () => ({
-        latitude: this.props.home.location.coords.latitude || 0,
-        longitude: this.props.home.location.coords.longitude || 0,
-        latitudeDelta: LATITUDE_DELTA,
-        longitudeDelta: LONGITUDE_DELTA
-    });
 
     calcDistance = newLatLng => {
         const { prevLatLng } = this.state;
@@ -177,38 +168,77 @@ class RiderMap extends React.Component {
         }
     };
 
-    toggleDrawer = () => {
-        this.props.navigation.toggleDrawer();
+    onPressZoomIn() {
+        this.region = {
+            latitude: this.state.focusedLocation.latitude,
+            longitude: this.state.focusedLocation.longitude,
+            latitudeDelta: this.state.focusedLocation.latitudeDelta * 10,
+            longitudeDelta: this.state.focusedLocation.longitudeDelta * 10
+        }
+
+        this.setState({
+            focusedLocation: {
+                latitudeDelta: this.region.latitudeDelta,
+                longitudeDelta: this.region.longitudeDelta,
+                latitude: this.region.latitude,
+                longitude: this.region.longitude
+            }
+        })
+        this.map.animateToRegion(this.region, 100);
+    }
+
+    onPressZoomOut() {
+        this.region = {
+            latitude: this.state.focusedLocation.latitude,
+            longitude: this.state.focusedLocation.longitude,
+            latitudeDelta: this.state.focusedLocation.latitudeDelta / 10,
+            longitudeDelta: this.state.focusedLocation.longitudeDelta / 10
+        }
+        this.setState({
+            focusedLocation: {
+                latitudeDelta: this.region.latitudeDelta,
+                longitudeDelta: this.region.longitudeDelta,
+                latitude: this.region.latitude,
+                longitude: this.region.longitude
+            }
+        })
+        this.map.animateToRegion(this.region, 100);
     }
 
     render() {
         const width = Dimensions.get('screen').width;
-        // const searchBarStyle = StyleSheet.flatten([styles.searchBar, {
-        //     top: 80,
-        //     width: width - 30,
-        //     elevation: 5
-        // }])
         return (
             <View style={{ flex: 1 }}>
                 {!this.props.home.toggle ? <View style={{ flex: 1 }}>
                     <MapContainer
-                        region={this.getMapRegion()}
-                        routeCoordinates={this.state.routeCoordinates}
+                        region={this.state.region}
+                        // routeCoordinates={this.state.routeCoordinates}
                         coordinate={this.state.coordinate}
                         selectedAddress={this.props.home.selectedAddress}
-                        toggleDrawer={this.toggleDrawer}
+                        toggleDrawer={this.props.toggleDrawer}
+                        zoomIn={this.onPressZoomOut}
+                        zoomOut={this.onPressZoomOut}
                     />
                     <MapSearch
-                        selectedAddress={this.props.home.selectedAddress}
                         toggleSearchModal={this.props.toggleSearchModal}
+                        getAddressPredictions={this.props.getAddressPredictions}
+                        getInputData={this.props.getInputData}
+                        selectedAddress={this.props.home.selectedAddress}
                     />
+                    {
+                        this.props.home.selectedAddress.pickUp && this.props.home.selectedAddress.dropOff ?
+                            <BookingDetails
+                                distanceMatrix={this.props.home.distanceMatrix}
+                                fare={this.props.home.fare}
+                            /> : null
+                    }
                 </View> : <SearchResult
                         inputData={this.props.home.inputData}
                         resultTypes={this.props.home.resultTypes}
                         predictions={this.props.home.predictions}
+                        getInputData={this.props.getInputData}
                         getAddressPredictions={this.props.getAddressPredictions}
                         getSelectedAddress={this.props.getSelectedAddress}
-                        getInputData={this.props.getInputData}
                         closeToggleModal={this.props.closeToggleModal}
                         searching={this.props.home.searching}
                         error={this.props.home.error}

@@ -6,7 +6,6 @@ import {
     Platform,
     PermissionsAndroid,
     Dimensions,
-    Text
 } from "react-native";
 import {
     Item,
@@ -15,6 +14,7 @@ import {
     Icon
 } from "native-base";
 import styles from "./MapSearchStyles";
+import Text from '../../config/AppText';
 
 const MapSearch = ({ toggleSearchModal, getAddressPredictions, getInputData, selectedAddress }) => {
     function handleSearch(key, val) {

@@ -26,4 +26,5 @@ export const doLogin = loginActions.doLogin,
     getAddressPredictions = homeActions.getAddressPredictions,
     getInputData = homeActions.getInputData,
     getSelectedAddress = homeActions.getSelectedAddress,
-    setInitialAddress = homeActions.setInitialAddress
+    updateInputAddress = homeActions.updateInputAddress,
+    getRouteDirections = homeActions.getRouteDirections

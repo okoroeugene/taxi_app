@@ -21,25 +21,41 @@ import {
     Icon
 } from "native-base";
 import styles from "./MapContainerStyles";
+import Animated from "react-native-reanimated";
+import MapViewDirections from 'react-native-maps-directions';
 
 const LATITUDE_DELTA = 0.009;
 const LONGITUDE_DELTA = 0.009;
 const LATITUDE = 37.78825;
 const LONGITUDE = -122.4324;
-const MapContainer = ({ region, routeCoordinates, coordinate, selectedAddress, toggleDrawer }) => {
+const MapContainer = ({ region, coordinate, selectedAddress, toggleDrawer, zoomIn, zoomOut }) => {
     const { pickUp, dropOff } = selectedAddress;
+    function changeRegion(region) {
+        onRegionChange(region)
+    }
     return (
         <View style={styles.mapContainer}>
             <MapView
                 style={styles.map}
                 provider={PROVIDER_GOOGLE}
-                showUserLocation
-                followUserLocation
+                // showUserLocation
+                followUserLocation={true}
+                zoomEnabled={true}
                 loadingEnabled
-                // onRegionChange
+                // onRegionChange={changeRegion}
                 region={region}
             >
                 {/* <Polyline coordinates={routeCoordinates} strokeWidth={5} /> */}
+                {/* {pickUp && dropOff && routeDirections ? <Polyline coordinates={routeDirections[1].toArray()} strokeWidth={3} /> : null} */}
+                {
+                    pickUp && dropOff ?
+                        <MapViewDirections
+                            origin={pickUp.location.latitude + "," + pickUp.location.longitude}
+                            destination={dropOff.location.latitude + "," + dropOff.location.longitude}
+                            apikey={"AIzaSyA-HjztLKyWGOUaIG9Bx_n6Ie_A5p1qMkQ"}
+                            strokeWidth={3}
+                        /> : null
+                }
                 <Marker.Animated
                     ref={marker => {
                         this.marker = marker;
@@ -49,14 +65,21 @@ const MapContainer = ({ region, routeCoordinates, coordinate, selectedAddress, t
 
                 {pickUp &&
                     <MapView.Marker
-                        coordinate={{ latitude: pickUp.latitude, longitude: pickUp.longitude }}
+                        coordinate={{ latitude: pickUp.location.latitude, longitude: pickUp.location.longitude }}
                         pinColor="green"
-                    />
+                        title="Pick Up"
+                    >
+                        <Animated.View style={[styles.markerWrap]}>
+                            <Animated.View style={[styles.ring]} />
+                            <View style={styles.marker} />
+                        </Animated.View>
+                    </MapView.Marker>
                 }
                 {dropOff &&
                     <MapView.Marker
-                        coordinate={{ latitude: dropOff.latitude, longitude: dropOff.longitude }}
+                        coordinate={{ latitude: dropOff.location.latitude, longitude: dropOff.location.longitude }}
                         pinColor="blue"
+                        title="Drop Off"
                     />
                 }
 

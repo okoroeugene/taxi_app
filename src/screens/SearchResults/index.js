@@ -1,12 +1,12 @@
 import React from 'react';
 import {
     View,
-    Text,
     FlatList,
     TouchableOpacity
 } from 'react-native';
 import { Input, Item, List, Icon, Left, Body, ListItem, Spinner } from 'native-base';
 import styles from './SearchResultStyles';
+import Text from '../../config/AppText';
 
 const SearchResult = ({ inputData, resultTypes, predictions, getInputData, getAddressPredictions, getSelectedAddress, closeToggleModal, searching, error }) => {
     function handleSelectedAddress(placeID) {
@@ -59,7 +59,7 @@ const SearchResult = ({ inputData, resultTypes, predictions, getInputData, getAd
             <View style={styles.searchResultsWrapper}>
                 <List
                     dataArray={predictions}
-                    key={(item, index) => index}
+                    keyExtractor={(item, index) => index.toString()}
                     renderRow={(item) =>
                         <View>
                             <ListItem onPress={() => handleSelectedAddress(item.placeID)} button avatar>

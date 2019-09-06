@@ -14,14 +14,12 @@ export default function homeReducer(state = initialState, action) {
                 location: action.payload
             })
 
-        case constants.GET_INITIAL_PICKUP_ADDRESS:
+        case constants.UPDATE_INPUT_ADDRESS:
             return Object.assign({}, state, {
-                selectedAddress: {
-                    pickUp: action.payload
-                }
+                currentAddress: action.payload
             })
 
-        case constants.GET_INITIAL_PICKUP_ADDRESS_ERROR:
+        case constants.UPDATE_INPUT_ADDRESS_ERROR:
             return Object.assign({}, state, {
                 error: action.payload
             })
@@ -79,6 +77,18 @@ export default function homeReducer(state = initialState, action) {
         case constants.GET_DISTANCE_MATRIX_ERROR:
             return Object.assign({}, state, {
                 error: action.payload
+            })
+        case constants.GET_ROUTE_DIRECTIONS:
+            return Object.assign({}, state, {
+                routeDirections: action.payload
+            })
+        case constants.GET_ROUTE_DIRECTIONS_ERROR:
+            return Object.assign({}, state, {
+                error: action.payload
+            })
+        case constants.GET_FARE:
+            return Object.assign({}, state, {
+                fare: action.payload
             })
         default:
             return state;

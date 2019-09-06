@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
         borderRadius: 2
     },
     mainInput: {
-        // fontFamily: 'NoirPro-Regular',
+        fontFamily: 'NoirPro-Medium',
         fontSize: 12,
         color: '#5C5C5C',
         marginLeft: 0
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
         height: "100%"
     },
     defaultFont: {
-        // fontFamily: 'NoirPro-Regular',
+        fontFamily: 'NoirPro-Regular',
         fontSize: 16
     },
     textHeader: {

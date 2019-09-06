@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { View } from "react-native";
 import LinearGradient from 'react-native-linear-gradient';
 import { Icon } from "native-base";
+import { NavigationActions, StackActions } from "react-navigation";
 
 class Splash extends Component {
     constructor(props) {
@@ -9,7 +10,12 @@ class Splash extends Component {
     }
 
     componentDidMount() {
-        setTimeout(() => this.props.navigation.navigate('RiderMap'), 4000)
+        const resetAction = StackActions.reset({
+            index: 0,
+            actions: [NavigationActions.navigate({ routeName: 'RiderMap' })],
+        });
+
+        setTimeout(() => this.props.navigation.dispatch(resetAction), 4000)
     }
 
     startHome() {

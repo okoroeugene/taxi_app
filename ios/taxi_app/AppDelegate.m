@@ -19,10 +19,10 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-  [GMSPlacesClient provideAPIKey:@"AIzaSyBMMFhVJYdRRst-pXSje7f_I7EPHDkPkyk"];
-  [GMSServices provideAPIKey:@"AIzaSyBMMFhVJYdRRst-pXSje7f_I7EPHDkPkyk"];
-  
-  [GMSServices provideAPIKey:@"AIzaSyBMMFhVJYdRRst-pXSje7f_I7EPHDkPkyk"];
+  [GMSPlacesClient provideAPIKey:@"AIzaSyA-HjztLKyWGOUaIG9Bx_n6Ie_A5p1qMkQ"];
+  [GMSServices provideAPIKey:@"AIzaSyA-HjztLKyWGOUaIG9Bx_n6Ie_A5p1qMkQ"];
+//  AIzaSyBMMFhVJYdRRst-pXSje7f_I7EPHDkPkyk
+  [GMSServices provideAPIKey:@"AIzaSyA-HjztLKyWGOUaIG9Bx_n6Ie_A5p1qMkQ"];
   RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
   RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge
                                                    moduleName:@"taxi_app"

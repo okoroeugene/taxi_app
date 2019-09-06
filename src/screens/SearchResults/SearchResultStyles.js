@@ -11,7 +11,7 @@ const styles = {
         opacity: 0.9
     },
     primaryText: {
-        fontWeight: "bold",
+        fontFamily: 'NoirPro-Medium',
         color: "#373737"
     },
     secondaryText: {
@@ -45,6 +45,7 @@ const styles = {
         marginTop: 10,
     },
     input: {
+        fontFamily: 'NoirPro-Regular',
         color: '#222B2F',
         height: 45,
         fontSize: 15,

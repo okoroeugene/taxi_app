@@ -20,4 +20,4 @@ const MyDrawerNavigator = createDrawerNavigator({
     },
 });
 
-export default createAppContainer(MyDrawerNavigator);
+export default createAppContainer(AppNavigator);
