@@ -28,7 +28,8 @@ const LATITUDE_DELTA = 0.009;
 const LONGITUDE_DELTA = 0.009;
 const LATITUDE = 37.78825;
 const LONGITUDE = -122.4324;
-const MapContainer = ({ region, coordinate, selectedAddress, toggleDrawer, zoomIn, zoomOut }) => {
+const API_KEY = "AIzaSyA-HjztLKyWGOUaIG9Bx_n6Ie_A5p1qMkQ";
+const MapContainer = ({ region, coordinate, selectedAddress, toggleDrawer, zoomIn, zoomOut, mapRef }) => {
     const { pickUp, dropOff } = selectedAddress;
     function changeRegion(region) {
         onRegionChange(region)
@@ -36,6 +37,7 @@ const MapContainer = ({ region, coordinate, selectedAddress, toggleDrawer, zoomI
     return (
         <View style={styles.mapContainer}>
             <MapView
+                ref={mapRef}
                 style={styles.map}
                 provider={PROVIDER_GOOGLE}
                 // showUserLocation
@@ -52,7 +54,7 @@ const MapContainer = ({ region, coordinate, selectedAddress, toggleDrawer, zoomI
                         <MapViewDirections
                             origin={pickUp.location.latitude + "," + pickUp.location.longitude}
                             destination={dropOff.location.latitude + "," + dropOff.location.longitude}
-                            apikey={"AIzaSyA-HjztLKyWGOUaIG9Bx_n6Ie_A5p1qMkQ"}
+                            apikey={API_KEY}
                             strokeWidth={3}
                         /> : null
                 }

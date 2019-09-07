@@ -47,8 +47,12 @@ class RiderMap extends React.Component {
 
         this.state = {
             inputTxt: false,
+            mapRef: {},
             region: {
-
+                latitude: 0,
+                longitude: 0,
+                latitudeDelta: LATITUDE_DELTA,
+                longitudeDelta: LONGITUDE_DELTA
             },
             routeCoordinates: [],
             distanceTravelled: 0,
@@ -60,11 +64,12 @@ class RiderMap extends React.Component {
                 longitudeDelta: 0
             })
         };
+        this.mapRef = this.mapRef.bind(this);
     }
 
     componentDidMount() {
         this.props.getCurrentLocation();
-        const { coordinate } = this.state;
+        // const { coordinate } = this.state;
         // this.requestCameraPermission();
 
         // this.watchID = Geolocation.watchPosition(
@@ -131,6 +136,16 @@ class RiderMap extends React.Component {
                     }
                 })
             }
+
+            if (prevProps.home.selectedAddress.pickUp && prevProps.home.selectedAddress.dropOff) {
+                const region = {
+                    latitude: prevProps.home.selectedAddress.pickUp.location.latitude,
+                    longitude: prevProps.home.selectedAddress.pickUp.location.longitude,
+                    latitudeDelta: LATITUDE_DELTA,
+                    longitudeDelta: LONGITUDE_DELTA
+                }
+                this.onPressZoomIn(region);
+            }
         }
     }
 
@@ -168,41 +183,57 @@ class RiderMap extends React.Component {
         }
     };
 
-    onPressZoomIn() {
+    onPressZoomIn(region) {
         this.region = {
-            latitude: this.state.focusedLocation.latitude,
-            longitude: this.state.focusedLocation.longitude,
-            latitudeDelta: this.state.focusedLocation.latitudeDelta * 10,
-            longitudeDelta: this.state.focusedLocation.longitudeDelta * 10
+            latitude: region.latitude,
+            longitude: region.longitude,
+            latitudeDelta: LATITUDE_DELTA * 10,
+            longitudeDelta: LONGITUDE_DELTA * 10
         }
 
         this.setState({
-            focusedLocation: {
+            region: {
                 latitudeDelta: this.region.latitudeDelta,
                 longitudeDelta: this.region.longitudeDelta,
                 latitude: this.region.latitude,
                 longitude: this.region.longitude
             }
         })
-        this.map.animateToRegion(this.region, 100);
+        setTimeout(() => {
+            this.map.animateToRegion(this.region, 1000);
+            this.map.animateCamera(
+                {
+                    center: {
+                        latitude: region.latitude,
+                        longitude: region.longitude,
+                    }
+                }
+            );
+        }, 1000);
     }
 
-    onPressZoomOut() {
+    onPressZoomOut(region) {
         this.region = {
-            latitude: this.state.focusedLocation.latitude,
-            longitude: this.state.focusedLocation.longitude,
-            latitudeDelta: this.state.focusedLocation.latitudeDelta / 10,
-            longitudeDelta: this.state.focusedLocation.longitudeDelta / 10
+            latitude: region.latitude,
+            longitude: region.longitude,
+            latitudeDelta: LATITUDE_DELTA / 10,
+            longitudeDelta: LONGITUDE_DELTA / 10
         }
         this.setState({
-            focusedLocation: {
+            region: {
                 latitudeDelta: this.region.latitudeDelta,
                 longitudeDelta: this.region.longitudeDelta,
                 latitude: this.region.latitude,
                 longitude: this.region.longitude
             }
         })
-        this.map.animateToRegion(this.region, 100);
+        setTimeout(() => {
+            this.map.animateToRegion(this.region, 100);
+        }, 1000);
+    }
+
+    mapRef(ref) {
+        this.map = ref;
     }
 
     render() {
@@ -211,6 +242,7 @@ class RiderMap extends React.Component {
             <View style={{ flex: 1 }}>
                 {!this.props.home.toggle ? <View style={{ flex: 1 }}>
                     <MapContainer
+                    ref={this.map}
                         region={this.state.region}
                         // routeCoordinates={this.state.routeCoordinates}
                         coordinate={this.state.coordinate}
@@ -218,6 +250,7 @@ class RiderMap extends React.Component {
                         toggleDrawer={this.props.toggleDrawer}
                         zoomIn={this.onPressZoomOut}
                         zoomOut={this.onPressZoomOut}
+                        mapRef={this.mapRef}
                     />
                     <MapSearch
                         toggleSearchModal={this.props.toggleSearchModal}
