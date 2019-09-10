@@ -27,4 +27,6 @@ export const doLogin = loginActions.doLogin,
     getInputData = homeActions.getInputData,
     getSelectedAddress = homeActions.getSelectedAddress,
     updateInputAddress = homeActions.updateInputAddress,
-    getRouteDirections = homeActions.getRouteDirections
+    getRouteDirections = homeActions.getRouteDirections,
+    getNearbyDrivers = homeActions.getNearbyDrivers,
+    nearestDriver = homeActions.nearestDriver

@@ -86,6 +86,18 @@ export default function homeReducer(state = initialState, action) {
             return Object.assign({}, state, {
                 error: action.payload
             })
+        case constants.GET_NEARBY_DRIVERS:
+            return Object.assign({}, state, {
+                nearbyDrivers: action.payload
+            })
+        case constants.GET_NEARBY_DRIVERS:
+            return Object.assign({}, state, {
+                error: action.payload
+            })
+        case constants.NEAREST_DRIVER:
+            return Object.assign({}, state, {
+                nearestDriver: action.payload
+            })
         case constants.GET_FARE:
             return Object.assign({}, state, {
                 fare: action.payload

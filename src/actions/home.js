@@ -8,7 +8,9 @@ import Geocoder from 'react-native-geocoding';
 Geocoder.init('AIzaSyA-HjztLKyWGOUaIG9Bx_n6Ie_A5p1qMkQ'); // use a valid API key
 import store from '../stores';
 import calculateFare from '../helpers/FareCalculator';
+import { FakeDrivers } from "../fakers/fake_drivers";
 var polyline = require('@mapbox/polyline');
+import haversine from "haversine";
 
 const {
     GET_CURRENT_LOCATION,
@@ -26,6 +28,7 @@ const {
     GET_FARE,
     GET_ROUTE_DIRECTIONS,
     GET_ROUTE_DIRECTIONS_ERROR,
+    NEAREST_DRIVER,
     BOOK_CAR,
     GET_NEARBY_DRIVERS
 } = constants;
@@ -156,11 +159,8 @@ export function getSelectedAddress(payload) {
                         mode: "driving",
                         key: "AIzaSyA-HjztLKyWGOUaIG9Bx_n6Ie_A5p1qMkQ"
                     }
-                    console.log(query)
                     Axios.get(`https://maps.googleapis.com/maps/api/distancematrix/json?origins=${query.origins}&destinations=${query.destinations}&mode=${query.mode}&key=${query.key}`)
                         .then(response => {
-                            console.log('MATRIXXXXXXX')
-                            console.log(response.data)
                             dispatch({
                                 type: GET_DISTANCE_MATRIX,
                                 payload: response.data
@@ -226,5 +226,40 @@ export function getRouteDirections() {
                     });
                 })
         }
+    }
+}
+
+export function getNearbyDrivers() {
+    return (dispatch, store) => {
+        var minDistance = 0;
+        var nearbyDrivers = [];
+        var userLocation = {
+            latitude: store().home.location.coords.latitude,
+            longitude: store().home.location.coords.longitude
+        }
+        FakeDrivers(userLocation.latitude, userLocation.longitude).forEach(drivers => {
+            let distance = haversine(userLocation, drivers.position);
+            drivers = Object.assign(drivers, { distance: distance });
+            if (distance <= 50) {
+                nearbyDrivers.push(drivers);
+            }
+            // if (minDistance === 0 || minDistance > distance) {
+            //     minDistance = distance;
+            //     nearbyDrivers = Object.assign({}, drivers);
+            // }
+        })
+        return dispatch({
+            type: GET_NEARBY_DRIVERS,
+            payload: nearbyDrivers
+        })
+    }
+}
+
+export function nearestDriver(driver) {
+    return (dispatch) => {
+        dispatch({
+            type: NEAREST_DRIVER,
+            payload: driver
+        })
     }
 }

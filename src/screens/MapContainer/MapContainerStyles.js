@@ -22,6 +22,17 @@ const styles = StyleSheet.create({
         ...StyleSheet.absoluteFillObject
         // flex: 1
     },
+    markerFixed: {
+        left: '50%',
+        marginLeft: -24,
+        marginTop: -48,
+        position: 'absolute',
+        top: '50%'
+    },
+    marker: {
+        height: 48,
+        width: 48
+    },
     bubble: {
         flex: 1,
         backgroundColor: "rgba(255,255,255,0.7)",

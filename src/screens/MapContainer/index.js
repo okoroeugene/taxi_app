@@ -6,7 +6,8 @@ import {
     TouchableOpacity,
     Platform,
     PermissionsAndroid,
-    Dimensions
+    Dimensions,
+    Image
 } from "react-native";
 import MapView, {
     Marker,
@@ -18,18 +19,20 @@ import {
     Item,
     Input,
     InputGroup,
-    Icon
+    Icon,
 } from "native-base";
 import styles from "./MapContainerStyles";
 import Animated from "react-native-reanimated";
 import MapViewDirections from 'react-native-maps-directions';
+import marker from '../../imgs/icons8-marker.png';
+import pickUpMarker from '../../imgs/flag-pink.png';
 
 const LATITUDE_DELTA = 0.009;
 const LONGITUDE_DELTA = 0.009;
 const LATITUDE = 37.78825;
 const LONGITUDE = -122.4324;
 const API_KEY = "AIzaSyA-HjztLKyWGOUaIG9Bx_n6Ie_A5p1qMkQ";
-const MapContainer = ({ region, coordinate, selectedAddress, toggleDrawer, zoomIn, zoomOut, mapRef }) => {
+const MapContainer = ({ region, coordinate, selectedAddress, toggleDrawer, zoomIn, zoomOut, mapRef, nearestDriver, onRegionChange }) => {
     const { pickUp, dropOff } = selectedAddress;
     function changeRegion(region) {
         onRegionChange(region)
@@ -43,12 +46,14 @@ const MapContainer = ({ region, coordinate, selectedAddress, toggleDrawer, zoomI
                 // showUserLocation
                 followUserLocation={true}
                 zoomEnabled={true}
-                loadingEnabled
-                // onRegionChange={changeRegion}
+                // onRegionChangeComplete={onRegionChange}
+                // loadingEnabled
+                // onLayout={() => mapRef && mapRef.fitToCoordinates(coordinate, { edgePadding: { top: 10, right: 10, bottom: 10, left: 10 }, animated: true })}
                 region={region}
             >
                 {/* <Polyline coordinates={routeCoordinates} strokeWidth={5} /> */}
                 {/* {pickUp && dropOff && routeDirections ? <Polyline coordinates={routeDirections[1].toArray()} strokeWidth={3} /> : null} */}
+
                 {
                     pickUp && dropOff ?
                         <MapViewDirections
@@ -58,30 +63,35 @@ const MapContainer = ({ region, coordinate, selectedAddress, toggleDrawer, zoomI
                             strokeWidth={3}
                         /> : null
                 }
-                <Marker.Animated
+                {/* <Marker.Animated
                     ref={marker => {
                         this.marker = marker;
                     }}
                     coordinate={coordinate}
-                />
+                /> */}
 
                 {pickUp &&
                     <MapView.Marker
-                        coordinate={{ latitude: pickUp.location.latitude, longitude: pickUp.location.longitude }}
-                        pinColor="green"
+                        coordinate={pickUp.location}
+                        image={pickUpMarker}
+                        // pinColor="green"
                         title="Pick Up"
-                    >
-                        <Animated.View style={[styles.markerWrap]}>
-                            <Animated.View style={[styles.ring]} />
-                            <View style={styles.marker} />
-                        </Animated.View>
-                    </MapView.Marker>
+                    />
                 }
                 {dropOff &&
                     <MapView.Marker
-                        coordinate={{ latitude: dropOff.location.latitude, longitude: dropOff.location.longitude }}
+                        coordinate={dropOff.location}
                         pinColor="blue"
                         title="Drop Off"
+                    />
+                }
+
+                {nearestDriver && Object.keys(nearestDriver).length > 0 &&
+                    <MapView.Marker
+                        coordinate={nearestDriver.position}
+                        // pinColor="yellow"
+                        image={require('../../imgs/taxi1-sm.png')}
+                        title="Driver Location"
                     />
                 }
 
@@ -97,6 +107,10 @@ const MapContainer = ({ region, coordinate, selectedAddress, toggleDrawer, zoomI
 
             </MapView>
 
+            <View style={styles.markerFixed}>
+                <Image style={styles.marker} source={marker} />
+            </View>
+
             <View style={styles.searchBox}>
                 <Icon
                     onPress={() => toggleDrawer()}
@@ -104,33 +118,6 @@ const MapContainer = ({ region, coordinate, selectedAddress, toggleDrawer, zoomI
                     type="Ionicons"
                     name="ios-menu"
                 />
-                {/* <View style={{ marginTop: 20, padding: 20 }}>
-                    <Item style={[{ backgroundColor: "white" }, styles.cardShadow]} regular>
-                        <Text style={{ color: "#bbb", paddingLeft: 8 }}>From</Text>
-                        <Input
-                            style={[styles.mainInput]}
-                            placeholderTextColor={"#bbb"}
-                            onFocus={() => this.toggleSearchModal()}
-                        />
-                        <TouchableOpacity>
-                            <Icon style={{ color: "#bbb" }} type="Ionicons" name="locate" />
-                        </TouchableOpacity>
-                        <TouchableOpacity>
-                            <Icon style={{ color: "#bbb" }} type="Ionicons" name="mic" />
-                        </TouchableOpacity>
-                    </Item>
-
-                    <Item style={[{ backgroundColor: "white", position: "relative", bottom: 10 }, styles.cardShadow]} regular>
-                        <Text style={{ color: "#bbb", paddingLeft: 8 }}>To</Text>
-                        <Input
-                            style={[styles.mainInput]}
-                            placeholderTextColor={"#bbb"}
-                        />
-                        <TouchableOpacity>
-                            <Icon style={{ color: "#bbb" }} type="Ionicons" name="mic" />
-                        </TouchableOpacity>
-                    </Item>
-                </View> */}
             </View>
             {/* 
             <View style={styles.buttonContainer}>

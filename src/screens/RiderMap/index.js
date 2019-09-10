@@ -30,6 +30,9 @@ import MapContainer from "../MapContainer";
 import MapSearch from "../MapSearch";
 import SearchResult from "../SearchResults";
 import BookingDetails from '../BookingDetails';
+import { FakeDrivers } from "../../fakers/fake_drivers";
+import DriverDetails from "../DriverDetails";
+import {objGetter} from '../../helpers/utils';
 
 const homePlace = { description: 'Home', geometry: { location: { lat: 48.8152937, lng: 2.4597668 } } };
 const workPlace = { description: 'Work', geometry: { location: { lat: 48.8496818, lng: 2.2940881 } } };
@@ -40,6 +43,7 @@ const LATITUDE_DELTA = 0.009;
 const LONGITUDE_DELTA = 0.009;
 const LATITUDE = 37.78825;
 const LONGITUDE = -122.4324;
+const DEFAULT_PADDING = { top: 40, right: 40, bottom: 40, left: 40 };
 
 class RiderMap extends React.Component {
     constructor(props) {
@@ -48,12 +52,14 @@ class RiderMap extends React.Component {
         this.state = {
             inputTxt: false,
             mapRef: {},
+            selected: false,
             region: {
                 latitude: 0,
                 longitude: 0,
                 latitudeDelta: LATITUDE_DELTA,
                 longitudeDelta: LONGITUDE_DELTA
             },
+            nearestDriver: {},
             routeCoordinates: [],
             distanceTravelled: 0,
             prevLatLng: {},
@@ -65,9 +71,20 @@ class RiderMap extends React.Component {
             })
         };
         this.mapRef = this.mapRef.bind(this);
+        this.requestRide = this.requestRide.bind(this);
+        this.fitMarkers = this.fitMarkers.bind(this);
+        this.toggleDrawer = this.toggleDrawer.bind(this);
+        this.onRegionChange = this.onRegionChange.bind(this);
+    }
+
+    static navigationOptions = {
+        drawerIcon: (
+            <Icon type="Ionicons" name="ios-pin" />
+        )
     }
 
     componentDidMount() {
+        const { navigation } = this.props;
         this.props.getCurrentLocation();
         // const { coordinate } = this.state;
         // this.requestCameraPermission();
@@ -144,7 +161,8 @@ class RiderMap extends React.Component {
                     latitudeDelta: LATITUDE_DELTA,
                     longitudeDelta: LONGITUDE_DELTA
                 }
-                this.onPressZoomIn(region);
+                this.fitMarkers(prevProps.home.selectedAddress.pickUp.location, prevProps.home.selectedAddress.dropOff.location);
+                // this.onPressZoomOut(region);
             }
         }
     }
@@ -183,7 +201,7 @@ class RiderMap extends React.Component {
         }
     };
 
-    onPressZoomIn(region) {
+    onPressZoomOut(region) {
         this.region = {
             latitude: region.latitude,
             longitude: region.longitude,
@@ -200,19 +218,34 @@ class RiderMap extends React.Component {
             }
         })
         setTimeout(() => {
-            this.map.animateToRegion(this.region, 1000);
             this.map.animateCamera(
                 {
-                    center: {
-                        latitude: region.latitude,
-                        longitude: region.longitude,
-                    }
+                    center: this.region
                 }
             );
+            // this.map.animateCamera(this.region, 100);
         }, 1000);
+        // setTimeout(async () => {
+        //     // this.map.animateToRegion(this.region, 1000);
+        //     const camera = await this.map.getCamera();
+        //     camera.heading += 10;
+        //     camera.pitch = 2;
+        //     // camera.altitude = 40;
+        //     camera.zoom += 2;
+        //     // camera.center.latitude += 0.5;
+        //     this.map.animateCamera(camera, { duration: 2000 });
+        //     // this.map.animateCamera(
+        //     //     {
+        //     //         center: {
+        //     //             latitude: region.latitude,
+        //     //             longitude: region.longitude,
+        //     //         }
+        //     //     }
+        //     // );
+        // }, 0);
     }
 
-    onPressZoomOut(region) {
+    onPressZoomIn(region) {
         this.region = {
             latitude: region.latitude,
             longitude: region.longitude,
@@ -232,9 +265,48 @@ class RiderMap extends React.Component {
         }, 1000);
     }
 
+    async animateCamera() {
+
+    }
+
     mapRef(ref) {
         this.map = ref;
     }
+
+    onSelect = driver => {
+        this.props.nearestDriver(driver);
+        this.setState({ nearestDriver: driver });
+    };
+
+    requestRide = () => {
+        const { navigation } = this.props;
+        navigation.navigate('LocateDriver', {
+            returnToRoute: navigation.state,
+            onSelect: this.onSelect
+        });
+    }
+
+    fitMarkers(pickUp, dropOff) {
+        setTimeout(() => {
+            var query = [
+                pickUp,
+                dropOff
+            ]
+            console.log(query)
+            this.map.fitToCoordinates(query, {
+                edgePadding: DEFAULT_PADDING,
+                animated: true,
+            });
+        }, 0);
+    }
+
+    onRegionChange = region => {
+        this.setState({
+            region
+        })
+    }
+
+    toggleDrawer = () => this.props.navigation.toggleDrawer();
 
     render() {
         const width = Dimensions.get('screen').width;
@@ -242,15 +314,17 @@ class RiderMap extends React.Component {
             <View style={{ flex: 1 }}>
                 {!this.props.home.toggle ? <View style={{ flex: 1 }}>
                     <MapContainer
-                    ref={this.map}
+                        // ref={this.map}
                         region={this.state.region}
                         // routeCoordinates={this.state.routeCoordinates}
                         coordinate={this.state.coordinate}
                         selectedAddress={this.props.home.selectedAddress}
-                        toggleDrawer={this.props.toggleDrawer}
+                        toggleDrawer={this.toggleDrawer}
                         zoomIn={this.onPressZoomOut}
                         zoomOut={this.onPressZoomOut}
                         mapRef={this.mapRef}
+                        nearestDriver={this.state.nearestDriver}
+                        onRegionChange={this.onRegionChange}
                     />
                     <MapSearch
                         toggleSearchModal={this.props.toggleSearchModal}
@@ -259,10 +333,17 @@ class RiderMap extends React.Component {
                         selectedAddress={this.props.home.selectedAddress}
                     />
                     {
-                        this.props.home.selectedAddress.pickUp && this.props.home.selectedAddress.dropOff ?
+                        this.props.home.selectedAddress.pickUp && this.props.home.selectedAddress.dropOff && Object.keys(this.state.nearestDriver).length === 0 ?
                             <BookingDetails
                                 distanceMatrix={this.props.home.distanceMatrix}
                                 fare={this.props.home.fare}
+                                requestRide={this.requestRide}
+                            /> : null
+                    }
+                    {
+                        Object.keys(this.state.nearestDriver).length > 0 ?
+                            <DriverDetails
+                                driverDetails={this.state.nearestDriver}
                             /> : null
                     }
                 </View> : <SearchResult
